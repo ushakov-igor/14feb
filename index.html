@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Валентинка-квиз</title>
+  <style>
+    :root {
+      --bg-a: #ff9aa8;
+      --bg-b: #ffd36e;
+      --bg-c: #ffb56b;
+      --text-main: #542028;
+      --text-soft: #724049;
+      --card-bg: rgba(255, 255, 255, 0.88);
+      --accent: #ff476a;
+      --accent-hover: #e73a5c;
+      --btn-dark: #2b2b30;
+      --soft-border: rgba(84, 32, 40, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100svh;
+      padding:
+        max(16px, env(safe-area-inset-top))
+        max(16px, env(safe-area-inset-right))
+        max(20px, env(safe-area-inset-bottom))
+        max(16px, env(safe-area-inset-left));
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      position: relative;
+      font-family: "Avenir Next", "Trebuchet MS", "Gill Sans", sans-serif;
+      color: var(--text-main);
+      background: linear-gradient(120deg, var(--bg-a), var(--bg-b), var(--bg-c), var(--bg-a));
+      background-size: 300% 300%;
+      animation: gradientShift 12s ease-in-out infinite;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 25%, rgba(255, 255, 255, 0.35), transparent 40%),
+        radial-gradient(circle at 80% 75%, rgba(255, 255, 255, 0.25), transparent 45%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hearts-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .heart {
+      position: absolute;
+      bottom: -12vh;
+      opacity: 0;
+      font-size: clamp(20px, 5vw, 32px);
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.14));
+      animation-name: floatUp;
+      animation-timing-function: linear;
+      animation-fill-mode: forwards;
+      transform: translateX(0);
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      width: min(94vw, 460px);
+      max-height: min(88svh, 840px);
+      border-radius: 28px;
+      padding: 24px 20px;
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      box-shadow:
+        0 18px 50px rgba(69, 17, 28, 0.23),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      overflow: auto;
+      overscroll-behavior: contain;
+    }
+
+    .card-inner {
+      display: grid;
+      gap: 14px;
+      animation: fadeIn 280ms ease;
+    }
+
+    .screen-center {
+      text-align: center;
+    }
+
+    .main-emoji {
+      font-size: clamp(64px, 18vw, 90px);
+      line-height: 1;
+      margin-bottom: 4px;
+      animation: popIn 650ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .intro-title {
+      margin: 0;
+      font-size: clamp(24px, 6vw, 34px);
+      line-height: 1.15;
+      letter-spacing: 0.2px;
+    }
+
+    .intro-subtitle {
+      margin: 0;
+      font-size: clamp(15px, 4vw, 18px);
+      color: var(--text-soft);
+      opacity: 0.95;
+    }
+
+    .buttons {
+      margin-top: 4px;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
+    }
+
+    .primary-btn,
+    .ghost-btn,
+    .restart-btn {
+      border-radius: 999px;
+      min-width: 120px;
+      padding: 13px 18px;
+      font-size: 18px;
+      font-weight: 700;
+      transition: filter 160ms ease, background-color 160ms ease;
+    }
+
+    .primary-btn {
+      color: #fff;
+      background: var(--accent);
+      box-shadow: 0 8px 18px rgba(231, 58, 92, 0.35);
+    }
+
+    .primary-btn:hover {
+      background: var(--accent-hover);
+      filter: brightness(1.03);
+    }
+
+    .ghost-btn {
+      color: #fff;
+      background: var(--btn-dark);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+    }
+
+    .no-btn {
+      position: relative;
+      --no-x: 0px;
+      --no-y: 0px;
+      transform: translate(var(--no-x), var(--no-y));
+      transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform;
+    }
+
+    .progress-line {
+      margin: 0;
+      font-size: 13px;
+      letter-spacing: 0.4px;
+      color: rgba(84, 32, 40, 0.7);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .movie-emoji {
+      margin: 0;
+      font-size: clamp(34px, 9vw, 50px);
+      line-height: 1.1;
+      text-align: center;
+      letter-spacing: 3px;
+    }
+
+    .movie-emoji--winner {
+      font-size: clamp(46px, 12vw, 66px);
+    }
+
+    .movie-image {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      object-fit: cover;
+      aspect-ratio: 16 / 9;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+    }
+
+    .quiz-quote,
+    .result-quote {
+      margin: 0;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      background: rgba(255, 255, 255, 0.42);
+      line-height: 1.34;
+      font-size: 15px;
+      text-align: left;
+    }
+
+    .timecode {
+      margin: -2px 0 0;
+      font-size: 13px;
+      color: rgba(84, 32, 40, 0.7);
+    }
+
+    .quiz-question {
+      margin: 2px 0 0;
+      font-size: clamp(20px, 5.2vw, 27px);
+      line-height: 1.22;
+    }
+
+    .answer-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .answer-btn {
+      width: 100%;
+      padding: 13px 14px;
+      border-radius: 16px;
+      border: 1px solid var(--soft-border);
+      background: rgba(255, 255, 255, 0.78);
+      color: var(--text-main);
+      text-align: left;
+      font-size: 16px;
+      line-height: 1.28;
+      font-weight: 600;
+      transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
+    }
+
+    .answer-btn:hover {
+      background: rgba(255, 255, 255, 0.98);
+      border-color: rgba(84, 32, 40, 0.22);
+      transform: translateY(-1px);
+    }
+
+    .answer-btn:active {
+      transform: scale(0.99);
+    }
+
+    .result-label {
+      margin: 0;
+      font-size: 14px;
+      color: rgba(84, 32, 40, 0.74);
+      letter-spacing: 0.25px;
+    }
+
+    .result-title {
+      margin: 0;
+      font-size: clamp(30px, 8vw, 40px);
+      line-height: 1.1;
+    }
+
+    .tie-note {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: rgba(84, 32, 40, 0.78);
+    }
+
+    .result-link {
+      justify-self: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: fit-content;
+      min-width: 168px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      text-decoration: none;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+      background: #2f3946;
+      box-shadow: 0 8px 18px rgba(47, 57, 70, 0.34);
+      transition: transform 160ms ease, filter 160ms ease;
+    }
+
+    .result-link:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.06);
+    }
+
+    .result-link:active {
+      transform: scale(0.98);
+    }
+
+    .result-note {
+      margin: 0;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.74);
+      background: rgba(255, 255, 255, 0.54);
+      font-size: 14px;
+      line-height: 1.35;
+      color: rgba(84, 32, 40, 0.92);
+    }
+
+    .restart-btn {
+      justify-self: center;
+      margin-top: 4px;
+      color: #fff;
+      background: var(--accent);
+      box-shadow: 0 8px 18px rgba(231, 58, 92, 0.35);
+    }
+
+    .restart-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    @keyframes gradientShift {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    @keyframes popIn {
+      0% {
+        transform: translateY(12px) scale(0.85);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes floatUp {
+      0% {
+        transform: translate3d(0, 0, 0) rotate(0deg);
+        opacity: 0;
+      }
+      12% {
+        opacity: 1;
+      }
+      100% {
+        transform: translate3d(var(--drift, 0px), -115vh, 0) rotate(var(--rotate, 0deg));
+        opacity: 0;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .card {
+        padding: 20px 14px;
+      }
+
+      .primary-btn,
+      .ghost-btn,
+      .restart-btn {
+        min-width: 110px;
+        font-size: 17px;
+      }
+
+      .answer-btn {
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="hearts-layer" id="heartsLayer" aria-hidden="true"></div>
+  <main class="card" id="card" aria-live="polite"></main>
+
+  <script>
+    const data = {
+      "meta": {
+        "title": "Валентинка-квиз",
+        "scoring": "sum_weights_pick_max",
+        "tieBreaker": "random_among_max"
+      },
+      "cards": [
+        {
+          "id": "q1",
+          "image": "IMAGE_URL_AMELIE",
+          "quote": "Если бы не ты, мои чувства были бы лишь бледным отражением чужой любви.",
+          "movie": "Амели",
+          "timecode": "00:53:10, 01:50:18 (OKKO)",
+          "question": "Если бы у нас был наш маленький ритуал на каждый день — какой?",
+          "answers": [
+            {
+              "text": "Улыбаться друг другу утром",
+              "weights": { "Амели": 3, "Полночь в Париже": 1 }
+            },
+            {
+              "text": "Просто обняться",
+              "weights": { "Если я останусь": 2, "P.S. Я люблю тебя": 2 }
+            },
+            {
+              "text": "Если куда-то уходим - оставить записку",
+              "weights": { "500 дней лета": 2, "Амели": 1 }
+            }
+          ]
+        },
+        {
+          "id": "q2",
+          "image": "IMAGE_URL_MR_NOBODY",
+          "quote": "Я твёрдо верю в одно. Что всегда надо признаваться в любви тем, кого мы любим.",
+          "movie": "Господин Никто",
+          "timecode": "01:08:01 (Rutube)",
+          "question": "Ты чаще говоришь мне «люблю»…",
+          "answers": [
+            {
+              "text": "Когда тебя переполняют чувства",
+              "weights": { "Господин Никто": 3, "Ванильное небо": 1 }
+            },
+            {
+              "text": "Когда все хорошо и ты спокойна",
+              "weights": { "P.S. Я люблю тебя": 2, "Если я останусь": 1, "Господин Никто": 1 }
+            },
+            {
+              "text": "Я больше показываю, чем говорю (но иногда тоже говорю!)",
+              "weights": { "500 дней лета": 2, "Если я останусь": 2 }
+            }
+          ]
+        },
+        {
+          "id": "q3",
+          "image": "IMAGE_URL_AGE_OF_ADALINE",
+          "quote": "Любовь невозможна без будущего… Без этого любовь не имеет смысла.",
+          "movie": "Век Адалин",
+          "timecode": "00:53:40 (Rutube 01:47:40)",
+          "question": "Представь нас через пару десятков лет. Что тебе хочется сильнее всего?",
+          "answers": [
+            {
+              "text": "Чтобы у нас был свой дом, пёсель, тачка",
+              "weights": { "Век Адалин": 3, "Если я останусь": 1 }
+            },
+            {
+              "text": "Чтобы между нами до сих пор жила романтика",
+              "weights": { "Амели": 2, "Полночь в Париже": 1, "P.S. Я люблю тебя": 1 }
+            },
+            {
+              "text": "Чтобы мы росли, менялись, но все равно были преданы друг другу",
+              "weights": { "Век Адалин": 2, "Господин Никто": 1, "500 дней лета": 1 }
+            }
+          ]
+        },
+        {
+          "id": "q4",
+          "image": "IMAGE_URL_PS_ILOVEYOU",
+          "quote": "Нам нельзя друг без друга. Я в этом уверен. Потому что до сих пор просыпаюсь каждое утро — первым делом хочу увидеть твоё лицо. P.S. Я люблю тебя",
+          "movie": "P.S. Я люблю тебя",
+          "timecode": "00:09:00 (Rutube 06:33)",
+          "question": "Первые минуты утра мечты — это…",
+          "answers": [
+            {
+              "text": "Проснуться вместе и первым делом обняться",
+              "weights": { "P.S. Я люблю тебя": 3, "Если я останусь": 1 }
+            },
+            {
+              "text": "Чтобы муж сходил за кофе и пятнадцать минуть поваляться",
+              "weights": { "Если я останусь": 2, "P.S. Я люблю тебя": 2 }
+            },
+            {
+              "text": "Посмеяться вместе со смешных роликов",
+              "weights": { "Амели": 2, "500 дней лета": 1 }
+            }
+          ]
+        },
+        {
+          "id": "q5",
+          "image": "IMAGE_URL_ME_BEFORE_YOU",
+          "quote": "Ты — единственная причина, по которой я всё ещё встаю по утрам.",
+          "movie": "До встречи с тобой",
+          "timecode": "01:14:21 (Rutube 01:50:15)",
+          "question": "Когда ты устаёшь или всё наваливается — что я могу сделать, чтобы тебе стало легче?",
+          "answers": [
+            {
+              "text": "Просто быть рядом и молча обнять",
+              "weights": { "До встречи с тобой": 3, "Если я останусь": 1 }
+            },
+            {
+              "text": "Рассмешить тебя — хоть чем, хоть глупостью",
+              "weights": { "Амели": 2, "Полночь в Париже": 1, "500 дней лета": 1 }
+            },
+            {
+              "text": "Сказать: «я с тобой» — и вместе разгрести проблему",
+              "weights": { "До встречи с тобой": 2, "P.S. Я люблю тебя": 1, "Господин Никто": 1 }
+            }
+          ]
+        },
+        {
+          "id": "q6",
+          "image": "IMAGE_URL_VANILLA_SKY",
+          "quote": "Эта улыбка — моя погибель.",
+          "movie": "Ванильное небо",
+          "timecode": "00:33:43",
+          "question": "Ты когда-нибудь чувствовала, что все вокруг исчезло и остались только мы с тобой?",
+          "answers": [
+            {
+              "text": "Да. В такие секунды мир реально исчезает",
+              "weights": { "Ванильное небо": 3 }
+            },
+            {
+              "text": "Иногда, это бывает неожиданно",
+              "weights": { "Ванильное небо": 2, "P.S. Я люблю тебя": 1, "Амели": 1 }
+            },
+            {
+              "text": "Редко, но если случается, то я это очень ценю",
+              "weights": { "Если я останусь": 2, "Ванильное небо": 1 }
+            }
+          ]
+        },
+        {
+          "id": "q7",
+          "image": "IMAGE_URL_IF_I_STAY",
+          "quote": "Мой дом — это ты. Неважно где мы будем, главное, что мы вместе.",
+          "movie": "Если я останусь",
+          "timecode": "01:37:52 (Rutube 01:46:40)",
+          "question": "Если бы мы могли прямо сейчас телепортироваться куда угодно вдвоём — куда бы ты выбрала?",
+          "answers": [
+            {
+              "text": "На Мальдивы, море, тишина, и никуда не спешить",
+              "weights": { "Если я останусь": 3, "P.S. Я люблю тебя": 1 }
+            },
+            {
+              "text": "В наш Париж, гулять и теряться на улицах",
+              "weights": { "Полночь в Париже": 2, "Амели": 1, "Если я останусь": 1 }
+            },
+            {
+              "text": "В новое место, страну, за нашим новым приключением",
+              "weights": { "Если я останусь": 2, "Господин Никто": 1, "Век Адалин": 1 }
+            }
+          ]
+        },
+        {
+          "id": "q8",
+          "image": "IMAGE_URL_500_DAYS",
+          "quote": "Люблю её улыбку. Люблю волосы. Люблю колени… Люблю её смех. Люблю, как она выглядит, когда спит.",
+          "movie": "500 дней лета",
+          "timecode": "00:13:43 (Rutube 01:35:04)",
+          "question": "В какие моменты ты ловишь себя на мысли: «я запомню это»?",
+          "answers": [
+            {
+              "text": "Когда мы смеёмся над чем-то совершенно глупым",
+              "weights": { "500 дней лета": 3, "Ванильное небо": 1 }
+            },
+            {
+              "text": "Когда мы в совсем новом месте",
+              "weights": { "500 дней лета": 2, "Амели": 1 }
+            },
+            {
+              "text": "Когда рядом спокойно, тихо и уютно",
+              "weights": { "Если я останусь": 2, "P.S. Я люблю тебя": 1, "500 дней лета": 1 }
+            }
+          ]
+        },
+        {
+          "id": "q9",
+          "image": "IMAGE_URL_GATSBY",
+          "quote": "Это всё благодаря тебе. В каждой идее — ты. В каждой вещи. И если тебе что-то не нравится, я готов всё поменять.",
+          "movie": "Великий Гэтсби",
+          "timecode": "01:13:30 (Rutube 02:22:05)",
+          "question": "Если ради любви нужно что-то изменить — что для тебя даётся легче всего?",
+          "answers": [
+            {
+              "text": "Поменять планы, привычки, всё",
+              "weights": { "Великий Гэтсби": 3 }
+            },
+            {
+              "text": "Подстроиться в мелочах",
+              "weights": { "Если я останусь": 2, "P.S. Я люблю тебя": 1, "Век Адалин": 1 }
+            },
+            {
+              "text": "Я хочу быть честной и не играть роль, даже если это сложно",
+              "weights": { "Господин Никто": 2, "500 дней лета": 2 }
+            }
+          ]
+        },
+        {
+          "id": "q10",
+          "image": "IMAGE_URL_MIDNIGHT_IN_PARIS",
+          "quote": "Мне нравится гулять с вами. Вы потрясающе выглядите.",
+          "movie": "Полночь в Париже",
+          "timecode": "00:52:15 (Rutube 01:33:56)",
+          "question": "Идеальное свидание вечером, когда мы вернемся — это…",
+          "answers": [
+            {
+              "text": "Долгая прогулка, разговоры, ресторан/бар",
+              "weights": { "Полночь в Париже": 3, "Амели": 1 }
+            },
+            {
+              "text": "Кино/роллки/кровать — только мы вдвоем",
+              "weights": { "P.S. Я люблю тебя": 2, "Если я останусь": 2 }
+            },
+            {
+              "text": "Что-то спонтанное: «поехали» и придумали на ходу",
+              "weights": { "Полночь в Париже": 2, "Господин Никто": 1, "Ванильное небо": 1 }
+            }
+          ]
+        }
+      ],
+      "movies": [
+        { "title": "Амели", "image": "IMAGE_URL_AMELIE" },
+        { "title": "Господин Никто", "image": "IMAGE_URL_MR_NOBODY" },
+        { "title": "Век Адалин", "image": "IMAGE_URL_AGE_OF_ADALINE" },
+        { "title": "P.S. Я люблю тебя", "image": "IMAGE_URL_PS_ILOVEYOU" },
+        { "title": "До встречи с тобой", "image": "IMAGE_URL_ME_BEFORE_YOU" },
+        { "title": "Ванильное небо", "image": "IMAGE_URL_VANILLA_SKY" },
+        { "title": "Если я останусь", "image": "IMAGE_URL_IF_I_STAY" },
+        { "title": "500 дней лета", "image": "IMAGE_URL_500_DAYS" },
+        { "title": "Великий Гэтсби", "image": "IMAGE_URL_GATSBY" },
+        { "title": "Полночь в Париже", "image": "IMAGE_URL_MIDNIGHT_IN_PARIS" }
+      ]
+    };
+
+    const movieEmojiMap = {
+      "Амели": "🎀☕️🗼",
+      "Господин Никто": "🧩🕰️💭",
+      "Век Адалин": "🌹⌛️✨",
+      "P.S. Я люблю тебя": "💌☘️❤️",
+      "До встречи с тобой": "🧣🫶🌦️",
+      "Ванильное небо": "☁️💫👁️",
+      "Если я останусь": "🎻🏡💞",
+      "500 дней лета": "📸🌦️💛",
+      "Великий Гэтсби": "🥂✨🎩",
+      "Полночь в Париже": "🌙🗼🚶"
+    };
+
+    const movieLinks = {
+      "Амели": "https://okko.tv/movie/le-fabuleux-destin-damelie-poulain",
+      "Господин Никто": "https://rutube.ru/video/0993c93d7c7844a3c82faeac3a479da1/",
+      "Век Адалин": "https://rutube.ru/video/abd22f590a351ffae1aa57990e420351/",
+      "P.S. Я люблю тебя": "https://rutube.ru/video/495fbc758bf2c9ed16b52cd5830feddb/",
+      "До встречи с тобой": "https://rutube.ru/video/f9e2cabb6d5bdc58665d6b38383f78a6/",
+      "Ванильное небо": "https://rutube.ru/video/16fd611834ad9bc067c431b8eeded3dc/",
+      "Если я останусь": "https://rutube.ru/video/d50a22156a9300d5971b487605a7bc21/",
+      "500 дней лета": "https://rutube.ru/video/82609c1b9734f65ccf94d46c735d62e1/",
+      "Великий Гэтсби": "https://rutube.ru/video/6b4e8828177e8da205dea25abaf5e880/",
+      "Полночь в Париже": "https://rutube.ru/video/7f14f444a4a2b3b6e8ddab41e0d82a4f/"
+    };
+
+    const heartsLayer = document.getElementById("heartsLayer");
+    const card = document.getElementById("card");
+
+    const heartEmojis = ["❤️", "💖", "💘", "💝", "💗", "💕", "💞"];
+    let noX = 0;
+    let noY = 0;
+    let resetTimer;
+    let currentCardIndex = 0;
+    let userAnswers = {};
+
+    function random(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => {
+        const map = {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          "\"": "&quot;",
+          "'": "&#39;"
+        };
+        return map[char];
+      });
+    }
+
+    function spawnHeart() {
+      const heart = document.createElement("span");
+      heart.className = "heart";
+      heart.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+
+      heart.style.left = `${random(0, 100)}vw`;
+      heart.style.animationDuration = `${random(4.5, 8.5)}s`;
+      heart.style.animationDelay = `${random(0, 0.25)}s`;
+      heart.style.setProperty("--drift", `${random(-90, 90)}px`);
+      heart.style.setProperty("--rotate", `${random(-22, 22)}deg`);
+
+      heartsLayer.appendChild(heart);
+      heart.addEventListener("animationend", () => heart.remove(), { once: true });
+    }
+
+    function getNoButton() {
+      return card.querySelector("#noBtn");
+    }
+
+    function setNoOffset(x, y) {
+      const noBtn = getNoButton();
+      if (!noBtn) {
+        noX = 0;
+        noY = 0;
+        return;
+      }
+
+      noX = clamp(x, -68, 68);
+      noY = clamp(y, -48, 48);
+      noBtn.style.setProperty("--no-x", `${noX}px`);
+      noBtn.style.setProperty("--no-y", `${noY}px`);
+    }
+
+    function scheduleNoReset() {
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => setNoOffset(0, 0), 260);
+    }
+
+    function moveNoAway(clientX, clientY) {
+      const noBtn = getNoButton();
+      if (!noBtn) return;
+
+      const rect = noBtn.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      let dx = centerX - clientX;
+      let dy = centerY - clientY;
+      let dist = Math.hypot(dx, dy);
+      const radius = 150;
+
+      if (dist > radius) {
+        scheduleNoReset();
+        return;
+      }
+
+      if (dist < 1) {
+        const angle = random(0, Math.PI * 2);
+        dx = Math.cos(angle);
+        dy = Math.sin(angle);
+        dist = 1;
+      }
+
+      const power = (radius - dist) / radius;
+      const step = 11 + power * 25;
+      setNoOffset(noX + (dx / dist) * step, noY + (dy / dist) * step);
+      scheduleNoReset();
+    }
+
+    function isRealImageUrl(url) {
+      return typeof url === "string" && url.trim() !== "" && !url.startsWith("IMAGE_URL_");
+    }
+
+    function getMovieEmoji(movieTitle) {
+      return movieEmojiMap[movieTitle] || "🎬❤️";
+    }
+
+    function renderMovieVisual(movieTitle, imageUrl, alt, winner = false) {
+      if (isRealImageUrl(imageUrl)) {
+        return `<img class="movie-image" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(alt || movieTitle)}">`;
+      }
+
+      const classes = winner ? "movie-emoji movie-emoji--winner" : "movie-emoji";
+      return `<p class="${classes}" aria-hidden="true">${escapeHtml(getMovieEmoji(movieTitle))}</p>`;
+    }
+
+    function renderIntro() {
+      currentCardIndex = 0;
+      userAnswers = {};
+      noX = 0;
+      noY = 0;
+
+      card.innerHTML = `
+        <section class="card-inner screen-center">
+          <p class="main-emoji">😍</p>
+          <h1 class="intro-title">Будешь моей валентинкой?</h1>
+          <p class="intro-subtitle">Скажи «Да» и пройди мини-квиз про нас и кино 💘</p>
+          <div class="buttons">
+            <button id="yesBtn" class="primary-btn" type="button">Да</button>
+            <button id="noBtn" class="ghost-btn no-btn" type="button">Нет</button>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderQuestion(cardData, index) {
+      const progress = `Вопрос ${index + 1} из ${data.cards.length}`;
+      const answersHtml = cardData.answers
+        .map((answer, answerIndex) => (
+          `<button type="button" class="answer-btn" data-answer-index="${answerIndex}">${escapeHtml(answer.text)}</button>`
+        ))
+        .join("");
+
+      card.innerHTML = `
+        <section class="card-inner">
+          <p class="progress-line">${progress}</p>
+          ${renderMovieVisual(cardData.movie, cardData.image, cardData.movie, false)}
+          <blockquote class="quiz-quote">«${escapeHtml(cardData.quote)}»</blockquote>
+          <p class="timecode">Таймкод: ${escapeHtml(cardData.timecode)}</p>
+          <h2 class="quiz-question">${escapeHtml(cardData.question)}</h2>
+          <div class="answer-list">${answersHtml}</div>
+        </section>
+      `;
+
+      card.scrollTop = 0;
+    }
+
+    function calculateResult() {
+      const scores = {};
+
+      data.movies.forEach((movie) => {
+        scores[movie.title] = 0;
+      });
+
+      data.cards.forEach((cardData) => {
+        const chosenIndex = userAnswers[cardData.id];
+        if (typeof chosenIndex !== "number") return;
+
+        const chosenAnswer = cardData.answers[chosenIndex];
+        if (!chosenAnswer || !chosenAnswer.weights) return;
+
+        Object.entries(chosenAnswer.weights).forEach(([movieTitle, weightRaw]) => {
+          const weight = Number(weightRaw) || 0;
+          scores[movieTitle] = (scores[movieTitle] || 0) + weight;
+        });
+      });
+
+      const scoreValues = Object.values(scores);
+      const maxScore = scoreValues.length ? Math.max(...scoreValues) : 0;
+      const winners = Object.keys(scores).filter((movieTitle) => scores[movieTitle] === maxScore);
+
+      let resultTitle = winners[0] || data.movies[0].title;
+      if (winners.length > 1 && data.meta.tieBreaker === "random_among_max") {
+        const randomWinnerIndex = Math.floor(Math.random() * winners.length);
+        resultTitle = winners[randomWinnerIndex];
+      }
+
+      const resultMovie = data.movies.find((movie) => movie.title === resultTitle) || {
+        "title": resultTitle,
+        "image": ""
+      };
+
+      const relatedCards = data.cards.filter((cardData) => cardData.movie === resultTitle);
+      const quoteSource = relatedCards[Math.floor(Math.random() * Math.max(relatedCards.length, 1))] || data.cards[0];
+
+      return {
+        scores,
+        maxScore,
+        winners,
+        resultTitle,
+        resultMovie,
+        quote: quoteSource ? quoteSource.quote : ""
+      };
+    }
+
+    function renderResult(result) {
+      const tieNote = result.winners.length > 1
+        ? `<p class="tie-note">Было несколько лидеров с ${result.maxScore} очками. Выбрали случайно среди них.</p>`
+        : "";
+
+      const movieLink = movieLinks[result.resultTitle];
+      const linkHtml = movieLink
+        ? `<a class="result-link" href="${escapeHtml(movieLink)}" target="_blank" rel="noopener noreferrer">Смотреть фильм</a>`
+        : "";
+
+      card.innerHTML = `
+        <section class="card-inner screen-center">
+          <p class="result-label">Ваш фильм по валентинка-квизу</p>
+          ${renderMovieVisual(result.resultTitle, result.resultMovie.image, result.resultTitle, true)}
+          <h2 class="result-title">${escapeHtml(result.resultTitle)}</h2>
+          <blockquote class="result-quote">«${escapeHtml(result.quote)}»</blockquote>
+          ${tieNote}
+          ${linkHtml}
+          <p class="result-note">Сохрани, с тебя обещание, что мы вместе посмотрим фильм и найдем этот момент ❤️</p>
+          <button id="restartBtn" class="restart-btn" type="button">Пройти ещё раз</button>
+        </section>
+      `;
+
+      card.scrollTop = 0;
+
+      for (let i = 0; i < 24; i++) {
+        setTimeout(spawnHeart, i * 60);
+      }
+    }
+
+    function startQuiz() {
+      currentCardIndex = 0;
+      userAnswers = {};
+      renderQuestion(data.cards[currentCardIndex], currentCardIndex);
+
+      for (let i = 0; i < 18; i++) {
+        setTimeout(spawnHeart, i * 70);
+      }
+    }
+
+    function onAnswerPicked(answerIndex) {
+      const currentCard = data.cards[currentCardIndex];
+      if (!currentCard) return;
+
+      userAnswers[currentCard.id] = answerIndex;
+
+      if (currentCardIndex < data.cards.length - 1) {
+        currentCardIndex += 1;
+        renderQuestion(data.cards[currentCardIndex], currentCardIndex);
+        return;
+      }
+
+      const result = calculateResult();
+      renderResult(result);
+    }
+
+    for (let i = 0; i < 14; i++) {
+      setTimeout(spawnHeart, i * 140);
+    }
+    setInterval(spawnHeart, 320);
+
+    card.addEventListener("click", (event) => {
+      const noBtn = event.target.closest("#noBtn");
+      if (noBtn) {
+        event.preventDefault();
+        return;
+      }
+
+      const yesBtn = event.target.closest("#yesBtn");
+      if (yesBtn) {
+        startQuiz();
+        return;
+      }
+
+      const answerBtn = event.target.closest(".answer-btn");
+      if (answerBtn) {
+        const pickedIndex = Number(answerBtn.dataset.answerIndex);
+        if (Number.isFinite(pickedIndex)) {
+          onAnswerPicked(pickedIndex);
+        }
+        return;
+      }
+
+      const restartBtn = event.target.closest("#restartBtn");
+      if (restartBtn) {
+        renderIntro();
+      }
+    });
+
+    card.addEventListener("pointermove", (event) => {
+      if (event.pointerType === "mouse" || event.pointerType === "pen") {
+        moveNoAway(event.clientX, event.clientY);
+      }
+    });
+
+    card.addEventListener("touchstart", (event) => {
+      const touch = event.touches[0];
+      if (touch) moveNoAway(touch.clientX, touch.clientY);
+    }, { passive: true });
+
+    card.addEventListener("touchmove", (event) => {
+      const touch = event.touches[0];
+      if (touch) moveNoAway(touch.clientX, touch.clientY);
+    }, { passive: true });
+
+    card.addEventListener("pointerleave", () => {
+      setNoOffset(0, 0);
+    });
+
+    card.addEventListener("pointerdown", (event) => {
+      const noBtn = event.target.closest("#noBtn");
+      if (!noBtn) return;
+
+      moveNoAway(event.clientX, event.clientY);
+      event.preventDefault();
+    });
+
+    renderIntro();
+  </script>
+</body>
+</html>
