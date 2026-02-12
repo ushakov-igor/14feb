@@ -386,9 +386,16 @@
       color: rgba(84, 32, 40, 0.9);
     }
 
-    .save-link-btn {
-      justify-self: center;
+    .result-links {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
       margin-top: 2px;
+    }
+
+    .text-link-btn {
       padding: 0;
       background: transparent;
       color: rgba(84, 32, 40, 0.88);
@@ -398,18 +405,6 @@
       text-underline-offset: 3px;
       text-decoration-thickness: 1.5px;
       border: none;
-    }
-
-    .restart-btn {
-      justify-self: center;
-      margin-top: 4px;
-      color: #fff;
-      background: var(--accent);
-      box-shadow: 0 8px 18px rgba(231, 58, 92, 0.35);
-    }
-
-    .restart-btn:hover {
-      background: var(--accent-hover);
     }
 
     @keyframes gradientShift {
@@ -1272,8 +1267,10 @@
           </section>
           ${linkHtml}
           <p class="result-note">Сохрани, с тебя обещание, что мы вместе посмотрим фильм и найдем этот момент ❤️</p>
-          <button id="restartBtn" class="restart-btn" type="button">Пройти ещё раз</button>
-          <button id="saveCardBtn" class="save-link-btn" type="button">Сохранить как открытку</button>
+          <div class="result-links">
+            <button id="restartBtn" class="text-link-btn" type="button">Пройти ещё раз</button>
+            <button id="saveCardBtn" class="text-link-btn" type="button">Сохранить как открытку</button>
+          </div>
         </section>
       `;
 
