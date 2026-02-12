@@ -386,16 +386,18 @@
       color: rgba(84, 32, 40, 0.9);
     }
 
-    .save-btn {
+    .save-link-btn {
       justify-self: center;
       margin-top: 2px;
-      color: #fff;
-      background: #2f3946;
-      box-shadow: 0 8px 18px rgba(47, 57, 70, 0.34);
-    }
-
-    .save-btn:hover {
-      filter: brightness(1.06);
+      padding: 0;
+      background: transparent;
+      color: rgba(84, 32, 40, 0.88);
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-thickness: 1.5px;
+      border: none;
     }
 
     .restart-btn {
@@ -1071,6 +1073,12 @@
       return cursorY;
     }
 
+    function shortenForPostcard(text, maxChars) {
+      const input = String(text || "").trim();
+      if (input.length <= maxChars) return input;
+      return `${input.slice(0, maxChars - 1)}…`;
+    }
+
     function buildPostcardCanvas(payload) {
       const { result, compatibility, datePlan } = payload;
       const canvas = document.createElement("canvas");
@@ -1093,60 +1101,69 @@
       }
       ctx.globalAlpha = 1;
 
-      drawRoundedRectPath(ctx, 56, 56, 968, 968, 38);
+      drawRoundedRectPath(ctx, 56, 56, 968, 968, 42);
       ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
       ctx.fill();
 
-      let y = 130;
+      let y = 132;
       ctx.fillStyle = "#6f2733";
+      ctx.textAlign = "center";
       ctx.font = '700 52px "Trebuchet MS", sans-serif';
-      ctx.fillText("Наш с тобой фильм", 106, y);
+      ctx.fillText("Наш с тобой фильм", 540, y);
 
       y += 78;
       ctx.font = '58px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
-      ctx.fillText(getMovieEmoji(result.resultTitle), 106, y);
+      ctx.fillText(getMovieEmoji(result.resultTitle), 540, y);
 
       y += 76;
       ctx.font = '700 64px "Trebuchet MS", sans-serif';
-      y = drawWrappedText(ctx, result.resultTitle, 106, y, 868, 68, 2);
+      y = drawWrappedText(ctx, result.resultTitle, 540, y, 860, 66, 2);
 
-      y += 52;
-      ctx.font = '500 34px "Trebuchet MS", sans-serif';
-      y = drawWrappedText(ctx, `«${result.quote}»`, 106, y, 868, 44, 3);
+      y += 38;
+      drawRoundedRectPath(ctx, 122, y - 34, 836, 140, 24);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.62)";
+      ctx.fill();
+
+      ctx.fillStyle = "#6f2733";
+      ctx.font = '500 33px "Trebuchet MS", sans-serif';
+      y = drawWrappedText(ctx, `«${result.quote}»`, 540, y, 760, 40, 3);
 
       y += 62;
       ctx.font = '700 34px "Trebuchet MS", sans-serif';
-      ctx.fillText(`Совпало с моими ответами: ${compatibility.matches}/${compatibility.total}`, 106, y);
+      ctx.fillText(`Совпало с моими ответами: ${compatibility.matches}/${compatibility.total}`, 540, y);
 
       y += 42;
       ctx.font = '500 28px "Trebuchet MS", sans-serif';
-      y = drawWrappedText(ctx, compatibility.text, 106, y, 868, 38, 2);
+      y = drawWrappedText(ctx, compatibility.text, 540, y, 820, 36, 2);
 
       y += 56;
       ctx.font = '700 38px "Trebuchet MS", sans-serif';
-      ctx.fillText("Наше идеальное свидание ✨", 106, y);
+      ctx.fillText("Наше идеальное свидание ✨", 540, y);
 
-      y += 40;
-      ctx.font = '500 26px "Trebuchet MS", sans-serif';
+      y += 38;
+      ctx.font = '500 25px "Trebuchet MS", sans-serif';
       datePlan.slice(0, 3).forEach((line) => {
-        if (y > 860) return;
-        y = drawWrappedText(ctx, `• ${line}`, 106, y, 868, 34, 2);
-        y += 26;
+        if (y > 846) return;
+        const shortLine = shortenForPostcard(line, 58);
+        y = drawWrappedText(ctx, `• ${shortLine}`, 540, y, 860, 34, 1);
+        y += 18;
       });
 
       const yearLabel = new Date().getFullYear();
-      const footerY = Math.min(970, Math.max(886, y + 12));
+      const footerY = Math.min(968, Math.max(910, y + 30));
 
-      ctx.font = '600 31px "Trebuchet MS", sans-serif';
+      ctx.font = '600 30px "Trebuchet MS", sans-serif';
       drawWrappedText(
         ctx,
         `14 февраля ${yearLabel} • Сохрани: обещание посмотреть этот фильм вместе ❤️`,
-        106,
+        540,
         footerY,
-        868,
+        860,
         38,
         2
       );
+
+      ctx.textAlign = "left";
 
       return canvas;
     }
@@ -1255,8 +1272,8 @@
           </section>
           ${linkHtml}
           <p class="result-note">Сохрани, с тебя обещание, что мы вместе посмотрим фильм и найдем этот момент ❤️</p>
-          <button id="saveCardBtn" class="primary-btn save-btn" type="button">Сохранить как открытку</button>
           <button id="restartBtn" class="restart-btn" type="button">Пройти ещё раз</button>
+          <button id="saveCardBtn" class="save-link-btn" type="button">Сохранить как открытку</button>
         </section>
       `;
 
