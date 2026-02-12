@@ -1136,54 +1136,100 @@
       ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
       ctx.fill();
 
-      let y = 136;
-      ctx.fillStyle = "#6f2733";
+      const headerText = "Наш с тобой фильм";
+      const emojiText = getMovieEmoji(result.resultTitle);
+      const quoteText = `«${result.quote}»`;
+      const footerText = "14 февраля 2026 - С любовью, твой Игорь <3";
+
       ctx.textAlign = "center";
-      ctx.font = '700 52px "Trebuchet MS", sans-serif';
-      ctx.fillText("Наш с тобой фильм", 540, y);
+      ctx.textBaseline = "top";
+      ctx.fillStyle = "#6f2733";
 
-      y += 78;
-      ctx.font = '58px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
-      ctx.fillText(getMovieEmoji(result.resultTitle), 540, y);
-
-      y += 76;
       ctx.font = '700 64px "Trebuchet MS", sans-serif';
-      y = drawWrappedText(ctx, result.resultTitle, 540, y, 860, 66, 2);
+      let movieLines = getWrappedLines(ctx, result.resultTitle, 860);
+      if (movieLines.length > 2) {
+        movieLines = movieLines.slice(0, 2);
+        movieLines[1] = `${movieLines[1].replace(/\s+\S*$/, "")}…`;
+      }
 
-      y += 34;
-      drawRoundedRectPath(ctx, 116, y - 28, 848, 430, 24);
+      let quoteFont = 44;
+      let quoteLines = [];
+      while (quoteFont >= 26) {
+        ctx.font = `500 ${quoteFont}px "Trebuchet MS", sans-serif`;
+        quoteLines = getWrappedLines(ctx, quoteText, 760);
+        if (quoteLines.length <= 7) break;
+        quoteFont -= 2;
+      }
+      if (quoteLines.length > 7) {
+        quoteLines = quoteLines.slice(0, 7);
+        quoteLines[6] = `${quoteLines[6].replace(/\s+\S*$/, "")}…`;
+      }
+
+      ctx.font = '600 46px "Trebuchet MS", sans-serif';
+      const footerLines = getWrappedLines(ctx, footerText, 860);
+
+      const titleHeight = 62;
+      const emojiHeight = 66;
+      const movieLineHeight = 72;
+      const quoteLineHeight = Math.round(quoteFont * 1.24);
+      const quotePadTop = 26;
+      const quotePadBottom = 24;
+      const quoteBoxHeight = quotePadTop + quoteLines.length * quoteLineHeight + quotePadBottom;
+      const footerLineHeight = 54;
+
+      const gapTitleToEmoji = 20;
+      const gapEmojiToMovie = 24;
+      const gapMovieToQuote = 22;
+      const gapQuoteToFooter = 28;
+
+      const totalContentHeight =
+        titleHeight +
+        gapTitleToEmoji +
+        emojiHeight +
+        gapEmojiToMovie +
+        movieLines.length * movieLineHeight +
+        gapMovieToQuote +
+        quoteBoxHeight +
+        gapQuoteToFooter +
+        footerLines.length * footerLineHeight;
+
+      const cardTop = 56;
+      const cardHeight = 968;
+      let y = cardTop + (cardHeight - totalContentHeight) / 2;
+
+      ctx.font = '700 52px "Trebuchet MS", sans-serif';
+      ctx.fillText(headerText, 540, y);
+
+      y += titleHeight + gapTitleToEmoji;
+      ctx.font = '58px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+      ctx.fillText(emojiText, 540, y);
+
+      y += emojiHeight + gapEmojiToMovie;
+      ctx.font = '700 64px "Trebuchet MS", sans-serif';
+      for (let i = 0; i < movieLines.length; i++) {
+        ctx.fillText(movieLines[i], 540, y + i * movieLineHeight);
+      }
+
+      y += movieLines.length * movieLineHeight + gapMovieToQuote;
+      drawRoundedRectPath(ctx, 116, y, 848, quoteBoxHeight, 24);
       ctx.fillStyle = "rgba(255, 255, 255, 0.62)";
       ctx.fill();
 
-      const quoteText = `«${result.quote}»`;
-      let quoteFont = 44;
-      let quoteLines = [];
-      while (quoteFont >= 28) {
-        ctx.font = `500 ${quoteFont}px "Trebuchet MS", sans-serif`;
-        quoteLines = getWrappedLines(ctx, quoteText, 760);
-        if (quoteLines.length <= 6) break;
-        quoteFont -= 2;
-      }
-
       ctx.fillStyle = "#6f2733";
-      const quoteLineHeight = Math.round(quoteFont * 1.22);
-      const quoteStartY = y + 34;
+      ctx.font = `500 ${quoteFont}px "Trebuchet MS", sans-serif`;
+      const quoteStartY = y + quotePadTop;
       for (let i = 0; i < quoteLines.length; i++) {
         ctx.fillText(quoteLines[i], 540, quoteStartY + i * quoteLineHeight);
       }
 
+      y += quoteBoxHeight + gapQuoteToFooter;
       ctx.font = '600 46px "Trebuchet MS", sans-serif';
-      drawWrappedText(
-        ctx,
-        "14 февраля 2026 - С любовью, твой Игорь <3",
-        540,
-        948,
-        860,
-        52,
-        2
-      );
+      for (let i = 0; i < footerLines.length; i++) {
+        ctx.fillText(footerLines[i], 540, y + i * footerLineHeight);
+      }
 
       ctx.textAlign = "left";
+      ctx.textBaseline = "alphabetic";
 
       return canvas;
     }
