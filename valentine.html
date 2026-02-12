@@ -355,6 +355,43 @@
       border: 1px solid rgba(255, 255, 255, 0.74);
     }
 
+    .evening-options {
+      margin-top: 8px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .evening-plan-btn {
+      border: 1px solid rgba(84, 32, 40, 0.2);
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.76);
+      color: rgba(84, 32, 40, 0.92);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.2;
+      transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
+    }
+
+    .evening-plan-btn.is-selected {
+      background: #ff476a;
+      border-color: #ff476a;
+      color: #fff;
+      box-shadow: 0 6px 14px rgba(231, 58, 92, 0.28);
+    }
+
+    .our-plan-note {
+      margin: 10px 0 0;
+      font-size: 14px;
+      line-height: 1.35;
+      color: rgba(84, 32, 40, 0.9);
+    }
+
+    .our-plan-note.is-empty {
+      opacity: 0.75;
+    }
+
     .result-block-title {
       margin: 0;
       font-size: 15px;
@@ -787,6 +824,24 @@
       "Ловлю мурашки, серьезно 🌙💗"
     ];
 
+    const eveningPlanChoices = [
+      {
+        id: "home",
+        label: "Дом",
+        text: "роллы, одеялко, фильм и только мы вдвоем"
+      },
+      {
+        id: "walk_bar",
+        label: "Прогулка + бар",
+        text: "гуляем, ужинаем, а потом заходим в барчик"
+      },
+      {
+        id: "spontaneous",
+        label: "Спонтанно",
+        text: "выбираем на ходу и едем в мини-приключение"
+      }
+    ];
+
     const heartsLayer = document.getElementById("heartsLayer");
     const card = document.getElementById("card");
 
@@ -798,6 +853,7 @@
     let userAnswers = {};
     let isTransitioning = false;
     let lastResultPayload = null;
+    let selectedEveningPlanId = "";
 
     function random(min, max) {
       return Math.random() * (max - min) + min;
@@ -913,6 +969,7 @@
       noY = 0;
       isTransitioning = false;
       lastResultPayload = null;
+      selectedEveningPlanId = "";
 
       card.innerHTML = `
         <section class="card-inner screen-center">
@@ -1258,6 +1315,30 @@
       link.click();
     }
 
+    function getEveningPlanById(planId) {
+      return eveningPlanChoices.find((plan) => plan.id === planId) || null;
+    }
+
+    function updateEveningPlanUI() {
+      const planButtons = card.querySelectorAll(".evening-plan-btn");
+      planButtons.forEach((button) => {
+        button.classList.toggle("is-selected", button.dataset.planId === selectedEveningPlanId);
+      });
+
+      const note = card.querySelector("#ourPlanNote");
+      if (!note) return;
+
+      const selectedPlan = getEveningPlanById(selectedEveningPlanId);
+      if (!selectedPlan) {
+        note.textContent = "Выбери сценарий, и фиксируем это как наш план на вечер ✨";
+        note.classList.add("is-empty");
+        return;
+      }
+
+      note.textContent = `Наш план на вечер: ${selectedPlan.text} 💫`;
+      note.classList.remove("is-empty");
+    }
+
     function calculateResult() {
       const scores = {};
 
@@ -1321,6 +1402,10 @@
         .map((line) => `<li>${escapeHtml(line)}</li>`)
         .join("");
 
+      const eveningOptionsHtml = eveningPlanChoices
+        .map((plan) => `<button class="evening-plan-btn" type="button" data-plan-id="${plan.id}">${escapeHtml(plan.label)}</button>`)
+        .join("");
+
       card.innerHTML = `
         <section class="card-inner screen-center">
           <p class="result-label">Наш с тобой фильм</p>
@@ -1337,6 +1422,11 @@
             <h3 class="result-block-title">Наше идеальное свидание ✨</h3>
             <ol class="plan-list">${datePlanHtml}</ol>
           </section>
+          <section class="result-block">
+            <h3 class="result-block-title">Выбираем наш вечер 🌙</h3>
+            <div class="evening-options">${eveningOptionsHtml}</div>
+            <p id="ourPlanNote" class="our-plan-note is-empty">Выбери сценарий, и фиксируем это как наш план на вечер ✨</p>
+          </section>
           ${linkHtml}
           <p class="result-note">Сохрани, с тебя обещание, что мы вместе посмотрим фильм и найдем этот момент ❤️</p>
           <div class="result-links">
@@ -1351,6 +1441,7 @@
         compatibility,
         datePlan
       };
+      updateEveningPlanUI();
 
       card.scrollTop = 0;
 
@@ -1364,6 +1455,7 @@
       userAnswers = {};
       isTransitioning = false;
       lastResultPayload = null;
+      selectedEveningPlanId = "";
       renderQuestion(data.cards[currentCardIndex], currentCardIndex);
 
       for (let i = 0; i < 18; i++) {
@@ -1426,6 +1518,13 @@
       const restartBtn = event.target.closest("#restartBtn");
       if (restartBtn) {
         renderIntro();
+        return;
+      }
+
+      const eveningPlanBtn = event.target.closest(".evening-plan-btn");
+      if (eveningPlanBtn) {
+        selectedEveningPlanId = eveningPlanBtn.dataset.planId || "";
+        updateEveningPlanUI();
         return;
       }
 
