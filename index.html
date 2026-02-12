@@ -1075,11 +1075,11 @@
       const { result, compatibility, datePlan } = payload;
       const canvas = document.createElement("canvas");
       canvas.width = 1080;
-      canvas.height = 1920;
+      canvas.height = 1080;
       const ctx = canvas.getContext("2d");
       if (!ctx) return null;
 
-      const bg = ctx.createLinearGradient(0, 0, 1080, 1920);
+      const bg = ctx.createLinearGradient(0, 0, 1080, 1080);
       bg.addColorStop(0, "#ff9aa8");
       bg.addColorStop(0.5, "#ffd36e");
       bg.addColorStop(1, "#ffb56b");
@@ -1087,64 +1087,65 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       ctx.globalAlpha = 0.18;
-      for (let i = 0; i < 26; i++) {
-        ctx.font = `${26 + (i % 4) * 6}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
-        ctx.fillText("💖", 40 + (i * 77) % 980, 80 + (i * 141) % 1760);
+      for (let i = 0; i < 18; i++) {
+        ctx.font = `${24 + (i % 4) * 5}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+        ctx.fillText("💖", 40 + (i * 95) % 980, 80 + (i * 131) % 920);
       }
       ctx.globalAlpha = 1;
 
-      drawRoundedRectPath(ctx, 72, 96, 936, 1728, 40);
+      drawRoundedRectPath(ctx, 56, 56, 968, 968, 38);
       ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
       ctx.fill();
 
-      let y = 190;
+      let y = 130;
       ctx.fillStyle = "#6f2733";
-      ctx.font = '700 48px "Trebuchet MS", sans-serif';
-      ctx.fillText("Наш с тобой фильм", 126, y);
-
-      y += 92;
-      ctx.font = '64px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
-      ctx.fillText(getMovieEmoji(result.resultTitle), 126, y);
-
-      y += 90;
-      ctx.font = '700 62px "Trebuchet MS", sans-serif';
-      y = drawWrappedText(ctx, result.resultTitle, 126, y, 828, 72, 2);
+      ctx.font = '700 52px "Trebuchet MS", sans-serif';
+      ctx.fillText("Наш с тобой фильм", 106, y);
 
       y += 78;
+      ctx.font = '58px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+      ctx.fillText(getMovieEmoji(result.resultTitle), 106, y);
+
+      y += 76;
+      ctx.font = '700 64px "Trebuchet MS", sans-serif';
+      y = drawWrappedText(ctx, result.resultTitle, 106, y, 868, 68, 2);
+
+      y += 52;
       ctx.font = '500 34px "Trebuchet MS", sans-serif';
-      y = drawWrappedText(ctx, `«${result.quote}»`, 126, y, 828, 48, 5);
+      y = drawWrappedText(ctx, `«${result.quote}»`, 106, y, 868, 44, 3);
 
-      y += 92;
-      ctx.font = '700 38px "Trebuchet MS", sans-serif';
-      ctx.fillText(`Совпало с моими ответами: ${compatibility.matches}/${compatibility.total}`, 126, y);
+      y += 62;
+      ctx.font = '700 34px "Trebuchet MS", sans-serif';
+      ctx.fillText(`Совпало с моими ответами: ${compatibility.matches}/${compatibility.total}`, 106, y);
 
-      y += 48;
-      ctx.font = '500 30px "Trebuchet MS", sans-serif';
-      y = drawWrappedText(ctx, compatibility.text, 126, y, 828, 42, 3);
-
-      y += 84;
-      ctx.font = '700 40px "Trebuchet MS", sans-serif';
-      ctx.fillText("Наше идеальное свидание ✨", 126, y);
-
-      y += 48;
+      y += 42;
       ctx.font = '500 28px "Trebuchet MS", sans-serif';
-      datePlan.slice(0, 4).forEach((line) => {
-        y = drawWrappedText(ctx, `• ${line}`, 126, y, 828, 40, 4);
-        y += 40;
+      y = drawWrappedText(ctx, compatibility.text, 106, y, 868, 38, 2);
+
+      y += 56;
+      ctx.font = '700 38px "Trebuchet MS", sans-serif';
+      ctx.fillText("Наше идеальное свидание ✨", 106, y);
+
+      y += 40;
+      ctx.font = '500 26px "Trebuchet MS", sans-serif';
+      datePlan.slice(0, 3).forEach((line) => {
+        if (y > 860) return;
+        y = drawWrappedText(ctx, `• ${line}`, 106, y, 868, 34, 2);
+        y += 26;
       });
 
       const yearLabel = new Date().getFullYear();
-      const footerY = Math.max(1560, y + 60);
+      const footerY = Math.min(970, Math.max(886, y + 12));
 
-      ctx.font = '600 30px "Trebuchet MS", sans-serif';
+      ctx.font = '600 31px "Trebuchet MS", sans-serif';
       drawWrappedText(
         ctx,
         `14 февраля ${yearLabel} • Сохрани: обещание посмотреть этот фильм вместе ❤️`,
-        126,
+        106,
         footerY,
-        828,
-        40,
-        3
+        868,
+        38,
+        2
       );
 
       return canvas;
@@ -1154,7 +1155,7 @@
       const canvas = buildPostcardCanvas(payload);
       if (!canvas) return;
 
-      const fileName = "nash-film-14-feb.png";
+      const fileName = "nash-film-square.png";
       if (canvas.toBlob) {
         canvas.toBlob((blob) => {
           if (!blob) return;
