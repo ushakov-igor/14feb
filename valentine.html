@@ -672,6 +672,30 @@
     const card = document.getElementById("card");
 
     const heartEmojis = ["❤️", "💖", "💘", "💝", "💗", "💕", "💞"];
+    const movieBaseTotals = {};
+    const movieBalanceFactors = {};
+
+    data.movies.forEach((movie) => {
+      movieBaseTotals[movie.title] = 0;
+    });
+
+    data.cards.forEach((cardData) => {
+      cardData.answers.forEach((answer) => {
+        Object.entries(answer.weights).forEach(([movieTitle, weightRaw]) => {
+          const weight = Number(weightRaw) || 0;
+          movieBaseTotals[movieTitle] = (movieBaseTotals[movieTitle] || 0) + weight;
+        });
+      });
+    });
+
+    const totalWeightSum = Object.values(movieBaseTotals).reduce((sum, value) => sum + value, 0);
+    const averageWeightPerMovie = totalWeightSum / Math.max(data.movies.length, 1);
+
+    data.movies.forEach((movie) => {
+      const baseTotal = movieBaseTotals[movie.title] || averageWeightPerMovie || 1;
+      movieBalanceFactors[movie.title] = averageWeightPerMovie / baseTotal;
+    });
+
     let noX = 0;
     let noY = 0;
     let resetTimer;
@@ -828,9 +852,11 @@
 
     function calculateResult() {
       const scores = {};
+      const balancedScores = {};
 
       data.movies.forEach((movie) => {
         scores[movie.title] = 0;
+        balancedScores[movie.title] = 0;
       });
 
       data.cards.forEach((cardData) => {
@@ -843,12 +869,14 @@
         Object.entries(chosenAnswer.weights).forEach(([movieTitle, weightRaw]) => {
           const weight = Number(weightRaw) || 0;
           scores[movieTitle] = (scores[movieTitle] || 0) + weight;
+          const factor = movieBalanceFactors[movieTitle] || 1;
+          balancedScores[movieTitle] = (balancedScores[movieTitle] || 0) + weight * factor;
         });
       });
 
-      const scoreValues = Object.values(scores);
+      const scoreValues = Object.values(balancedScores);
       const maxScore = scoreValues.length ? Math.max(...scoreValues) : 0;
-      const winners = Object.keys(scores).filter((movieTitle) => scores[movieTitle] === maxScore);
+      const winners = Object.keys(balancedScores).filter((movieTitle) => balancedScores[movieTitle] === maxScore);
 
       let resultTitle = winners[0] || data.movies[0].title;
       if (winners.length > 1 && data.meta.tieBreaker === "random_among_max") {
@@ -866,6 +894,7 @@
 
       return {
         scores,
+        balancedScores,
         maxScore,
         winners,
         resultTitle,
@@ -875,8 +904,9 @@
     }
 
     function renderResult(result) {
+      const maxScoreText = Number.isInteger(result.maxScore) ? String(result.maxScore) : result.maxScore.toFixed(2);
       const tieNote = result.winners.length > 1
-        ? `<p class="tie-note">Было несколько лидеров с ${result.maxScore} очками. Выбрали случайно среди них.</p>`
+        ? `<p class="tie-note">Было несколько лидеров с ${maxScoreText} балла. Выбрали случайно среди них.</p>`
         : "";
 
       const movieLink = movieLinks[result.resultTitle];
