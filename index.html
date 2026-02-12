@@ -1140,8 +1140,8 @@
       datePlan.slice(0, 3).forEach((line) => {
         if (y > 846) return;
         const shortLine = shortenForPostcard(line, 58);
-        y = drawWrappedText(ctx, `• ${shortLine}`, 540, y, 860, 34, 1);
-        y += 18;
+        y = drawWrappedText(ctx, `• ${shortLine}`, 540, y, 860, 36, 1);
+        y += 34;
       });
 
       const yearLabel = new Date().getFullYear();
