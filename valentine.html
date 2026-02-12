@@ -317,6 +317,87 @@
       color: rgba(84, 32, 40, 0.92);
     }
 
+    .moment-screen {
+      min-height: 320px;
+      align-content: center;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .moment-emoji {
+      margin: 0;
+      font-size: clamp(52px, 14vw, 72px);
+      line-height: 1;
+    }
+
+    .moment-title {
+      margin: 0;
+      font-size: clamp(20px, 5vw, 28px);
+      line-height: 1.15;
+    }
+
+    .moment-answer {
+      margin: 0;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.54);
+      border: 1px solid rgba(255, 255, 255, 0.74);
+      font-size: 14px;
+      line-height: 1.35;
+      color: rgba(84, 32, 40, 0.92);
+    }
+
+    .result-block {
+      text-align: left;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.74);
+    }
+
+    .result-block-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 800;
+      color: rgba(84, 32, 40, 0.94);
+    }
+
+    .compat-score {
+      margin: 8px 0 0;
+      font-size: 16px;
+      font-weight: 800;
+      color: rgba(84, 32, 40, 0.94);
+    }
+
+    .compat-text {
+      margin: 6px 0 0;
+      font-size: 14px;
+      line-height: 1.35;
+      color: rgba(84, 32, 40, 0.9);
+    }
+
+    .plan-list {
+      margin: 8px 0 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+      font-size: 14px;
+      line-height: 1.35;
+      color: rgba(84, 32, 40, 0.9);
+    }
+
+    .save-btn {
+      justify-self: center;
+      margin-top: 2px;
+      color: #fff;
+      background: #2f3946;
+      box-shadow: 0 8px 18px rgba(47, 57, 70, 0.34);
+    }
+
+    .save-btn:hover {
+      filter: brightness(1.06);
+    }
+
     .restart-btn {
       justify-self: center;
       margin-top: 4px;
@@ -668,6 +749,27 @@
       "Полночь в Париже": "https://rutube.ru/video/7f14f444a4a2b3b6e8ddab41e0d82a4f/"
     };
 
+    const myAnswers = {
+      "q1": 1,
+      "q2": 1,
+      "q3": 1,
+      "q4": 2,
+      "q5": 0,
+      "q6": 0,
+      "q7": 1,
+      "q8": 1,
+      "q9": 0,
+      "q10": 0
+    };
+
+    const momentPhrases = [
+      "Это прямо в сердце! 💘",
+      "Ооо, это так по-нашему ✨",
+      "Запомнил. Это забираем в наш день ❤️",
+      "Красивый выбор, родная 🫶",
+      "Обожаю этот вайб у нас 🌙"
+    ];
+
     const heartsLayer = document.getElementById("heartsLayer");
     const card = document.getElementById("card");
 
@@ -677,6 +779,8 @@
     let resetTimer;
     let currentCardIndex = 0;
     let userAnswers = {};
+    let isTransitioning = false;
+    let lastResultPayload = null;
 
     function random(min, max) {
       return Math.random() * (max - min) + min;
@@ -790,6 +894,8 @@
       userAnswers = {};
       noX = 0;
       noY = 0;
+      isTransitioning = false;
+      lastResultPayload = null;
 
       card.innerHTML = `
         <section class="card-inner screen-center">
@@ -824,6 +930,247 @@
       `;
 
       card.scrollTop = 0;
+    }
+
+    function getMomentEmoji(answerText) {
+      const text = String(answerText || "").toLowerCase();
+      if (text.includes("коф")) return "☕️";
+      if (text.includes("париж")) return "🗼";
+      if (text.includes("сме")) return "😂";
+      if (text.includes("обнят")) return "🤗";
+      if (text.includes("кино")) return "🎬";
+      if (text.includes("приключ")) return "🧭";
+      return "💞";
+    }
+
+    function renderAnswerMoment(answerText) {
+      const phrase = momentPhrases[Math.floor(Math.random() * momentPhrases.length)];
+      const emoji = getMomentEmoji(answerText);
+
+      card.innerHTML = `
+        <section class="card-inner moment-screen">
+          <p class="moment-emoji">${emoji}</p>
+          <h2 class="moment-title">${escapeHtml(phrase)}</h2>
+          <p class="moment-answer">«${escapeHtml(answerText)}»</p>
+        </section>
+      `;
+    }
+
+    function getCompatibilityText(percent) {
+      if (percent >= 90) return "Это уровень «мы чувствуем одинаково» 😍";
+      if (percent >= 70) return "Очень близко. У нас реально общий вайб 💫";
+      if (percent >= 50) return "Классный баланс: похожи, но с изюминкой 🤍";
+      return "В этом и магия: мы разные, и это делает нас сильнее ❤️";
+    }
+
+    function calculateCompatibility() {
+      let matches = 0;
+      const total = data.cards.length;
+
+      data.cards.forEach((cardData) => {
+        const wifeIndex = userAnswers[cardData.id];
+        const myIndex = myAnswers[cardData.id];
+        if (typeof wifeIndex === "number" && typeof myIndex === "number" && wifeIndex === myIndex) {
+          matches += 1;
+        }
+      });
+
+      const percent = Math.round((matches / Math.max(total, 1)) * 100);
+      return {
+        matches,
+        total,
+        percent,
+        text: getCompatibilityText(percent)
+      };
+    }
+
+    function buildDatePlan(resultTitle) {
+      const morningOptions = [
+        "Неспешное утро: вместе проснулись, обнялись и немного повалялись.",
+        "Кофе в постель и уютный старт дня без суеты.",
+        "Смешные ролики в кровати и много совместного смеха."
+      ];
+
+      const careOptions = [
+        "Днем делаем мягкую паузу: обнимашки и тишина, только мы вдвоем.",
+        "Добавляем легкости: шутки, подколы и твоя любимая улыбка.",
+        "Командный режим: вместе закрываем все мелкие дела и освобождаем вечер."
+      ];
+
+      const routeOptions = [
+        "Маршрут в стиле отдыха: красивое место и спокойный темп.",
+        "Романтичная прогулка по городу в стиле «наш Париж».",
+        "Немного спонтанности: выбираем новое место на ходу."
+      ];
+
+      const eveningOptions = [
+        "Вечером идем на долгую прогулку и ужин с разговорами.",
+        "Домашний вечер: роллы, плед и полный режим «только мы».",
+        "Мини-приключение: внезапный план и импровизация до ночи."
+      ];
+
+      const memoryOptions = [
+        "Ловим моменты для памяти: шутим и смеемся над мелочами.",
+        "Делаем пару фото в новом месте, чтобы сохранить этот день.",
+        "Финал в спокойствии: много тепла, тишины и близости."
+      ];
+
+      const q4 = userAnswers["q4"];
+      const q5 = userAnswers["q5"];
+      const q7 = userAnswers["q7"];
+      const q8 = userAnswers["q8"];
+      const q10 = userAnswers["q10"];
+
+      return [
+        morningOptions[q4] || morningOptions[1],
+        careOptions[q5] || careOptions[0],
+        routeOptions[q7] || routeOptions[1],
+        eveningOptions[q10] || eveningOptions[1],
+        memoryOptions[q8] || memoryOptions[2],
+        `Финал дня: включаем «${resultTitle}» и ищем наш момент по таймкоду 💘`
+      ];
+    }
+
+    function drawRoundedRectPath(ctx, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + width, y, x + width, y + height, r);
+      ctx.arcTo(x + width, y + height, x, y + height, r);
+      ctx.arcTo(x, y + height, x, y, r);
+      ctx.arcTo(x, y, x + width, y, r);
+      ctx.closePath();
+    }
+
+    function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
+      const words = String(text).split(/\s+/).filter(Boolean);
+      let line = "";
+      let linesUsed = 0;
+      let cursorY = y;
+
+      for (let i = 0; i < words.length; i++) {
+        const candidate = line ? `${line} ${words[i]}` : words[i];
+        const width = ctx.measureText(candidate).width;
+
+        if (width <= maxWidth) {
+          line = candidate;
+          continue;
+        }
+
+        ctx.fillText(line, x, cursorY);
+        linesUsed += 1;
+        if (maxLines && linesUsed >= maxLines) return cursorY;
+        cursorY += lineHeight;
+        line = words[i];
+      }
+
+      if (line) {
+        ctx.fillText(line, x, cursorY);
+      }
+
+      return cursorY;
+    }
+
+    function buildPostcardCanvas(payload) {
+      const { result, compatibility, datePlan } = payload;
+      const canvas = document.createElement("canvas");
+      canvas.width = 1080;
+      canvas.height = 1920;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+
+      const bg = ctx.createLinearGradient(0, 0, 1080, 1920);
+      bg.addColorStop(0, "#ff9aa8");
+      bg.addColorStop(0.5, "#ffd36e");
+      bg.addColorStop(1, "#ffb56b");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.globalAlpha = 0.18;
+      for (let i = 0; i < 26; i++) {
+        ctx.font = `${26 + (i % 4) * 6}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+        ctx.fillText("💖", 40 + (i * 77) % 980, 80 + (i * 141) % 1760);
+      }
+      ctx.globalAlpha = 1;
+
+      drawRoundedRectPath(ctx, 72, 96, 936, 1728, 40);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+      ctx.fill();
+
+      let y = 190;
+      ctx.fillStyle = "#6f2733";
+      ctx.font = '700 48px "Trebuchet MS", sans-serif';
+      ctx.fillText("Наш с тобой фильм", 126, y);
+
+      y += 92;
+      ctx.font = '64px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+      ctx.fillText(getMovieEmoji(result.resultTitle), 126, y);
+
+      y += 90;
+      ctx.font = '700 62px "Trebuchet MS", sans-serif';
+      y = drawWrappedText(ctx, result.resultTitle, 126, y, 828, 72, 2);
+
+      y += 78;
+      ctx.font = '500 34px "Trebuchet MS", sans-serif';
+      y = drawWrappedText(ctx, `«${result.quote}»`, 126, y, 828, 48, 5);
+
+      y += 92;
+      ctx.font = '700 38px "Trebuchet MS", sans-serif';
+      ctx.fillText(`Совпало с моими ответами: ${compatibility.matches}/${compatibility.total}`, 126, y);
+
+      y += 48;
+      ctx.font = '500 30px "Trebuchet MS", sans-serif';
+      y = drawWrappedText(ctx, compatibility.text, 126, y, 828, 42, 3);
+
+      y += 84;
+      ctx.font = '700 40px "Trebuchet MS", sans-serif';
+      ctx.fillText("Наше идеальное свидание ✨", 126, y);
+
+      y += 48;
+      ctx.font = '500 30px "Trebuchet MS", sans-serif';
+      datePlan.slice(0, 4).forEach((line) => {
+        y = drawWrappedText(ctx, `• ${line}`, 126, y, 828, 40, 3);
+        y += 22;
+      });
+
+      const yearLabel = new Date().getFullYear();
+
+      ctx.font = '600 30px "Trebuchet MS", sans-serif';
+      drawWrappedText(
+        ctx,
+        `14 февраля ${yearLabel} • Сохрани: обещание посмотреть этот фильм вместе ❤️`,
+        126,
+        1700,
+        828,
+        40,
+        3
+      );
+
+      return canvas;
+    }
+
+    function savePostcard(payload) {
+      const canvas = buildPostcardCanvas(payload);
+      if (!canvas) return;
+
+      const fileName = "nash-film-14-feb.png";
+      if (canvas.toBlob) {
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = fileName;
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1200);
+        }, "image/png");
+        return;
+      }
+
+      const link = document.createElement("a");
+      link.href = canvas.toDataURL("image/png");
+      link.download = fileName;
+      link.click();
     }
 
     function calculateResult() {
@@ -874,7 +1221,7 @@
       };
     }
 
-    function renderResult(result) {
+    function renderResult(result, compatibility, datePlan) {
       const tieNote = result.winners.length > 1
         ? `<p class="tie-note">Было несколько лидеров с ${result.maxScore} очками. Выбрали случайно среди них.</p>`
         : "";
@@ -884,6 +1231,10 @@
         ? `<a class="result-link" href="${escapeHtml(movieLink)}" target="_blank" rel="noopener noreferrer">Смотреть фильм</a>`
         : "";
 
+      const datePlanHtml = datePlan
+        .map((line) => `<li>${escapeHtml(line)}</li>`)
+        .join("");
+
       card.innerHTML = `
         <section class="card-inner screen-center">
           <p class="result-label">Наш с тобой фильм</p>
@@ -891,11 +1242,27 @@
           <h2 class="result-title">${escapeHtml(result.resultTitle)}</h2>
           <blockquote class="result-quote">«${escapeHtml(result.quote)}»</blockquote>
           ${tieNote}
+          <section class="result-block">
+            <h3 class="result-block-title">Насколько совпали мы с тобой 💌</h3>
+            <p class="compat-score">${compatibility.matches} из ${compatibility.total} (${compatibility.percent}%)</p>
+            <p class="compat-text">${escapeHtml(compatibility.text)}</p>
+          </section>
+          <section class="result-block">
+            <h3 class="result-block-title">Наше идеальное свидание ✨</h3>
+            <ol class="plan-list">${datePlanHtml}</ol>
+          </section>
           ${linkHtml}
           <p class="result-note">Сохрани, с тебя обещание, что мы вместе посмотрим фильм и найдем этот момент ❤️</p>
+          <button id="saveCardBtn" class="primary-btn save-btn" type="button">Сохранить как открытку</button>
           <button id="restartBtn" class="restart-btn" type="button">Пройти ещё раз</button>
         </section>
       `;
+
+      lastResultPayload = {
+        result,
+        compatibility,
+        datePlan
+      };
 
       card.scrollTop = 0;
 
@@ -907,6 +1274,8 @@
     function startQuiz() {
       currentCardIndex = 0;
       userAnswers = {};
+      isTransitioning = false;
+      lastResultPayload = null;
       renderQuestion(data.cards[currentCardIndex], currentCardIndex);
 
       for (let i = 0; i < 18; i++) {
@@ -916,18 +1285,27 @@
 
     function onAnswerPicked(answerIndex) {
       const currentCard = data.cards[currentCardIndex];
-      if (!currentCard) return;
+      if (!currentCard || isTransitioning) return;
 
       userAnswers[currentCard.id] = answerIndex;
+      const chosenAnswer = currentCard.answers[answerIndex];
+      isTransitioning = true;
+      renderAnswerMoment(chosenAnswer ? chosenAnswer.text : "");
 
-      if (currentCardIndex < data.cards.length - 1) {
-        currentCardIndex += 1;
-        renderQuestion(data.cards[currentCardIndex], currentCardIndex);
-        return;
-      }
+      setTimeout(() => {
+        if (currentCardIndex < data.cards.length - 1) {
+          currentCardIndex += 1;
+          renderQuestion(data.cards[currentCardIndex], currentCardIndex);
+          isTransitioning = false;
+          return;
+        }
 
-      const result = calculateResult();
-      renderResult(result);
+        const result = calculateResult();
+        const compatibility = calculateCompatibility();
+        const datePlan = buildDatePlan(result.resultTitle);
+        renderResult(result, compatibility, datePlan);
+        isTransitioning = false;
+      }, 900);
     }
 
     for (let i = 0; i < 14; i++) {
@@ -960,6 +1338,12 @@
       const restartBtn = event.target.closest("#restartBtn");
       if (restartBtn) {
         renderIntro();
+        return;
+      }
+
+      const saveCardBtn = event.target.closest("#saveCardBtn");
+      if (saveCardBtn && lastResultPayload) {
+        savePostcard(lastResultPayload);
       }
     });
 
