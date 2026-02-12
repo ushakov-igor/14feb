@@ -1261,8 +1261,9 @@
     }
 
     function renderResult(result, compatibility, datePlan) {
-      const tieNote = result.winners.length > 1
-        ? `<p class="tie-note">Было несколько лидеров с ${result.maxScore} очками. Выбрали случайно среди них.</p>`
+      const otherFinalists = result.winners.filter((movieTitle) => movieTitle !== result.resultTitle);
+      const tieNote = otherFinalists.length > 0
+        ? `<p class="tie-note">Тоже были в финале: ${escapeHtml(otherFinalists.join(", "))}</p>`
         : "";
 
       const movieLink = movieLinks[result.resultTitle];
