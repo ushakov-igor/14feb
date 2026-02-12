@@ -1127,20 +1127,21 @@
       ctx.fillText("Наше идеальное свидание ✨", 126, y);
 
       y += 48;
-      ctx.font = '500 30px "Trebuchet MS", sans-serif';
+      ctx.font = '500 28px "Trebuchet MS", sans-serif';
       datePlan.slice(0, 4).forEach((line) => {
-        y = drawWrappedText(ctx, `• ${line}`, 126, y, 828, 40, 3);
-        y += 22;
+        y = drawWrappedText(ctx, `• ${line}`, 126, y, 828, 40, 4);
+        y += 40;
       });
 
       const yearLabel = new Date().getFullYear();
+      const footerY = Math.max(1560, y + 60);
 
       ctx.font = '600 30px "Trebuchet MS", sans-serif';
       drawWrappedText(
         ctx,
         `14 февраля ${yearLabel} • Сохрани: обещание посмотреть этот фильм вместе ❤️`,
         126,
-        1700,
+        footerY,
         828,
         40,
         3
