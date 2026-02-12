@@ -1291,28 +1291,80 @@
       return canvas;
     }
 
+    function dataUrlToBlob(dataUrl) {
+      if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:")) return null;
+
+      const parts = dataUrl.split(",");
+      if (parts.length < 2) return null;
+
+      const header = parts[0];
+      const body = parts[1];
+      const mimeMatch = header.match(/^data:([^;]+);base64$/);
+      const mimeType = mimeMatch ? mimeMatch[1] : "image/png";
+
+      try {
+        const binary = atob(body);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        return new Blob([bytes], { type: mimeType });
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function downloadDataUrl(dataUrl, fileName) {
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = fileName;
+      link.click();
+    }
+
+    async function sharePostcardFile(blob, fileName) {
+      if (!blob || typeof File === "undefined") return false;
+      if (typeof navigator === "undefined" || typeof navigator.share !== "function") return false;
+
+      const file = new File([blob], fileName, { type: blob.type || "image/png" });
+      const shareData = {
+        files: [file],
+        title: "Наш с тобой фильм",
+        text: "14 февраля 2026 - С любовью, твой Игорь <3"
+      };
+
+      if (typeof navigator.canShare === "function" && !navigator.canShare({ files: [file] })) {
+        return false;
+      }
+
+      try {
+        await navigator.share(shareData);
+        return true;
+      } catch (error) {
+        if (error && error.name === "AbortError") {
+          return true;
+        }
+        return false;
+      }
+    }
+
     function savePostcard(payload) {
       const canvas = buildPostcardCanvas(payload);
       if (!canvas) return;
 
       const fileName = "nash-film-square.png";
-      if (canvas.toBlob) {
-        canvas.toBlob((blob) => {
-          if (!blob) return;
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = fileName;
-          link.click();
-          setTimeout(() => URL.revokeObjectURL(url), 1200);
-        }, "image/png");
+      const dataUrl = canvas.toDataURL("image/png");
+      const blob = dataUrlToBlob(dataUrl);
+
+      if (blob) {
+        sharePostcardFile(blob, fileName).then((shared) => {
+          if (!shared) {
+            downloadDataUrl(dataUrl, fileName);
+          }
+        });
         return;
       }
 
-      const link = document.createElement("a");
-      link.href = canvas.toDataURL("image/png");
-      link.download = fileName;
-      link.click();
+      downloadDataUrl(dataUrl, fileName);
     }
 
     function getEveningPlanById(planId) {
