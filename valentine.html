@@ -1088,14 +1088,30 @@
       return cursorY;
     }
 
-    function shortenForPostcard(text, maxChars) {
-      const input = String(text || "").trim();
-      if (input.length <= maxChars) return input;
-      return `${input.slice(0, maxChars - 1)}…`;
+    function getWrappedLines(ctx, text, maxWidth) {
+      const words = String(text).split(/\s+/).filter(Boolean);
+      const lines = [];
+      let line = "";
+
+      for (let i = 0; i < words.length; i++) {
+        const candidate = line ? `${line} ${words[i]}` : words[i];
+        const width = ctx.measureText(candidate).width;
+
+        if (width <= maxWidth) {
+          line = candidate;
+          continue;
+        }
+
+        if (line) lines.push(line);
+        line = words[i];
+      }
+
+      if (line) lines.push(line);
+      return lines;
     }
 
     function buildPostcardCanvas(payload) {
-      const { result, compatibility, datePlan } = payload;
+      const { result } = payload;
       const canvas = document.createElement("canvas");
       canvas.width = 1080;
       canvas.height = 1080;
@@ -1120,7 +1136,7 @@
       ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
       ctx.fill();
 
-      let y = 132;
+      let y = 136;
       ctx.fillStyle = "#6f2733";
       ctx.textAlign = "center";
       ctx.font = '700 52px "Trebuchet MS", sans-serif';
@@ -1134,47 +1150,36 @@
       ctx.font = '700 64px "Trebuchet MS", sans-serif';
       y = drawWrappedText(ctx, result.resultTitle, 540, y, 860, 66, 2);
 
-      y += 38;
-      drawRoundedRectPath(ctx, 122, y - 34, 836, 140, 24);
+      y += 34;
+      drawRoundedRectPath(ctx, 116, y - 28, 848, 430, 24);
       ctx.fillStyle = "rgba(255, 255, 255, 0.62)";
       ctx.fill();
 
+      const quoteText = `«${result.quote}»`;
+      let quoteFont = 44;
+      let quoteLines = [];
+      while (quoteFont >= 28) {
+        ctx.font = `500 ${quoteFont}px "Trebuchet MS", sans-serif`;
+        quoteLines = getWrappedLines(ctx, quoteText, 760);
+        if (quoteLines.length <= 6) break;
+        quoteFont -= 2;
+      }
+
       ctx.fillStyle = "#6f2733";
-      ctx.font = '500 33px "Trebuchet MS", sans-serif';
-      y = drawWrappedText(ctx, `«${result.quote}»`, 540, y, 760, 40, 3);
+      const quoteLineHeight = Math.round(quoteFont * 1.22);
+      const quoteStartY = y + 34;
+      for (let i = 0; i < quoteLines.length; i++) {
+        ctx.fillText(quoteLines[i], 540, quoteStartY + i * quoteLineHeight);
+      }
 
-      y += 62;
-      ctx.font = '700 34px "Trebuchet MS", sans-serif';
-      ctx.fillText(`Совпало с моими ответами: ${compatibility.matches}/${compatibility.total}`, 540, y);
-
-      y += 42;
-      ctx.font = '500 28px "Trebuchet MS", sans-serif';
-      y = drawWrappedText(ctx, compatibility.text, 540, y, 820, 36, 2);
-
-      y += 56;
-      ctx.font = '700 38px "Trebuchet MS", sans-serif';
-      ctx.fillText("Наше идеальное свидание ✨", 540, y);
-
-      y += 38;
-      ctx.font = '500 25px "Trebuchet MS", sans-serif';
-      datePlan.slice(0, 3).forEach((line) => {
-        if (y > 846) return;
-        const shortLine = shortenForPostcard(line, 58);
-        y = drawWrappedText(ctx, `• ${shortLine}`, 540, y, 860, 36, 1);
-        y += 34;
-      });
-
-      const yearLabel = new Date().getFullYear();
-      const footerY = Math.min(968, Math.max(910, y + 30));
-
-      ctx.font = '600 30px "Trebuchet MS", sans-serif';
+      ctx.font = '600 46px "Trebuchet MS", sans-serif';
       drawWrappedText(
         ctx,
-        `14 февраля ${yearLabel} • Сохрани: обещание посмотреть этот фильм вместе ❤️`,
+        "14 февраля 2026 - С любовью, твой Игорь <3",
         540,
-        footerY,
+        948,
         860,
-        38,
+        52,
         2
       );
 
