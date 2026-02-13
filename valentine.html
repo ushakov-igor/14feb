@@ -65,6 +65,14 @@
       z-index: 0;
     }
 
+    .burst-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 2;
+    }
+
     .heart {
       position: absolute;
       bottom: -12vh;
@@ -544,6 +552,7 @@
 </head>
 <body>
   <div class="hearts-layer" id="heartsLayer" aria-hidden="true"></div>
+  <div class="burst-layer" id="burstLayer" aria-hidden="true"></div>
   <main class="card" id="card" aria-live="polite"></main>
 
   <script>
@@ -875,6 +884,7 @@
     ];
 
     const heartsLayer = document.getElementById("heartsLayer");
+    const burstLayer = document.getElementById("burstLayer");
     const card = document.getElementById("card");
 
     const heartEmojis = ["❤️", "💖", "💘", "💝", "💗", "💕", "💞"];
@@ -925,7 +935,7 @@
     }
 
     function burstAroundButton(button) {
-      if (!button || !heartsLayer) return;
+      if (!button || !burstLayer) return;
 
       const rect = button.getBoundingClientRect();
       const originX = rect.left + rect.width / 2;
@@ -947,7 +957,7 @@
         particle.style.animationDuration = `${random(640, 940)}ms`;
         particle.style.animationDelay = `${random(0, 90)}ms`;
 
-        heartsLayer.appendChild(particle);
+        burstLayer.appendChild(particle);
         particle.addEventListener("animationend", () => particle.remove(), { once: true });
       }
     }
